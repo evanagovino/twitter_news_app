@@ -89,7 +89,10 @@ class TwitterPull:
         spread = Spread(self.GOOGLE_SHEETS_ID, 
                         config=service_account,
                         sheet=self.sheet_name)
-        spread.sheet.clear()
+        spread.sheets.clear()
+        update_time = datetime.strftime(datetime.now(), '%Y-%m-%d %H:%M:%S')
+        update_time = f'Last Updated: {update_time} EST'
+        spread.update_cells(start='A1', end='A1', sheet='last_updated', vals=[update_time])
         spread.df_to_sheet(df, index=False, sheet='news', start='A1')
 
 if __name__ == "__main__":
