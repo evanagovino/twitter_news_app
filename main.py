@@ -2,14 +2,14 @@ import twitter
 from bs4 import BeautifulSoup
 import requests
 import re
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 import pandas as pd
 from gspread_pandas import Spread
 import json
 
 class TwitterPull:
     def __init__(self):
-        self.banned_words = ['Twitter', 'robot']
+        self.banned_words = ['Twitter', 'robot', 'YouTube', 'Instagram']
         self.TWITTER_LIST_ID = '1042268003302354949'
         self.GOOGLE_SERVICE_CREDS_LOCATION = 'google_service_account.json'
         self.TWITTER_CREDS_LOCATION = 'twitter_creds.json'
@@ -33,7 +33,11 @@ class TwitterPull:
                 if soup.title:
                     parse_title = self.find_banned_words(soup.title.text)
                     if parse_title:
-                        page_title = soup.title.text
+                        [s.decompose() for s in soup("script")]  # remove <script> elements
+                        body_text = soup.body.get_text()
+                        language = detect(body_text)
+                        if language == 'en':
+                            page_title = soup.title.text
         except:
             pass
         try:
@@ -90,7 +94,7 @@ class TwitterPull:
                         config=service_account,
                         sheet=self.sheet_name)
         spread.sheets.clear()
-        update_time = datetime.strftime(datetime.now(), '%Y-%m-%d %H:%M:%S')
+        update_time = datetime.strftime(datetime.now() - timedelta(hours=4), '%Y-%m-%d %H:%M:%S')
         update_time = f'Last Updated: {update_time} EST'
         spread.update_cells(start='A1', end='A1', sheet='last_updated', vals=[update_time])
         spread.df_to_sheet(df, index=False, sheet='news', start='A1')
