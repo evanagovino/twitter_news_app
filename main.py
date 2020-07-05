@@ -5,6 +5,7 @@ import re
 from datetime import datetime, timezone, timedelta
 import pandas as pd
 from gspread_pandas import Spread
+from langdetect import detect
 import json
 
 class TwitterPull:
