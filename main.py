@@ -86,19 +86,23 @@ class TwitterPull:
                 if result:
                     master_list.append(result)
         df = pd.DataFrame(master_list, columns=['title', 'link', 'retweets', 'seconds_since'])
-        df = df[df['seconds_since'] <= self.time_limit]
-        df = df.groupby(['title', 'link'])[['retweets', 'seconds_since']].max().reset_index()
-        df = df.sort_values('retweets', ascending=False).reset_index(drop=True)
+        self.df = df[df['seconds_since'] <= self.time_limit]
+        self.df.title = self.df.title.str.replace('\n','').replace('\r', '').replace('\t', '')
+        reset = self.df.groupby('title')['seconds_since'].min().reset_index()
+        self.df = reset.merge(self.df, 
+                              how='inner', 
+                              on=['title', 'seconds_since'])
+        #self.df = self.df.groupby(['title', 'retweets', 'link'])['seconds_since'].min().reset_index()
         with open(self.GOOGLE_SERVICE_CREDS_LOCATION) as f:
-            service_account = json.load(f)
+           service_account = json.load(f)
         spread = Spread(self.GOOGLE_SHEETS_ID, 
-                        config=service_account,
-                        sheet=self.sheet_name)
+                       config=service_account,
+                       sheet=self.sheet_name)
         spread.sheets.clear()
         update_time = datetime.strftime(datetime.now() - timedelta(hours=4), '%Y-%m-%d %H:%M:%S')
         update_time = f'Last Updated: {update_time} EST'
         spread.update_cells(start='A1', end='A1', sheet='last_updated', vals=[update_time])
-        spread.df_to_sheet(df, index=False, sheet='news', start='A1')
+        spread.df_to_sheet(self.df, index=False, sheet='news', start='A1')
 
 if __name__ == "__main__":
     twitter_tool = TwitterPull()
