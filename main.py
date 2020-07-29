@@ -17,6 +17,7 @@ class TwitterPull:
         self.GOOGLE_SHEETS_ID = '1oY7URLTauSIBJKS9z7AKAPTHajyvy4GhTQ016PkB20M'
         self.time_limit = 172800 # 48 hours
         self.sheet_name = 'news'
+        self.minimum_words_in_title = 3
 
     def find_banned_words(self, title_text):
         dont_return_text = True
@@ -27,7 +28,7 @@ class TwitterPull:
 
     def get_page_title(self, url):
         try:
-            r = requests.get(url)
+            r = requests.get(url, timeout=5)
             if r.status_code == 200:
                 html_doc = r.content
                 soup = BeautifulSoup(html_doc)
@@ -86,19 +87,20 @@ class TwitterPull:
                 if result:
                     master_list.append(result)
         df = pd.DataFrame(master_list, columns=['title', 'link', 'retweets', 'seconds_since'])
+        mask = (df.title.str.split(' ').str.len() > self.minimum_words_in_title).index
+        df = df.iloc[mask, :]
         self.df = df[df['seconds_since'] <= self.time_limit]
         self.df.title = self.df.title.str.replace('\n','').replace('\r', '').replace('\t', '')
         reset = self.df.groupby('title')['seconds_since'].min().reset_index()
         self.df = reset.merge(self.df, 
                               how='inner', 
                               on=['title', 'seconds_since'])
-        #self.df = self.df.groupby(['title', 'retweets', 'link'])['seconds_since'].min().reset_index()
         with open(self.GOOGLE_SERVICE_CREDS_LOCATION) as f:
            service_account = json.load(f)
         spread = Spread(self.GOOGLE_SHEETS_ID, 
                        config=service_account,
                        sheet=self.sheet_name)
-        spread.sheets.clear()
+        spread.clear_sheet(sheet=self.sheet_name)
         update_time = datetime.strftime(datetime.now() - timedelta(hours=4), '%Y-%m-%d %H:%M:%S')
         update_time = f'Last Updated: {update_time} EST'
         spread.update_cells(start='A1', end='A1', sheet='last_updated', vals=[update_time])
