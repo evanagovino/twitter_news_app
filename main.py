@@ -88,7 +88,7 @@ class TwitterPull:
                     master_list.append(result)
         df = pd.DataFrame(master_list, columns=['title', 'link', 'retweets', 'seconds_since'])
         mask = (df.title.str.split(' ').str.len() > self.minimum_words_in_title).index
-        df = df.iloc[mask, :]
+        df = df[mask]
         self.df = df[df['seconds_since'] <= self.time_limit]
         self.df.title = self.df.title.str.replace('\n','').replace('\r', '').replace('\t', '')
         reset = self.df.groupby('title')['seconds_since'].min().reset_index()
