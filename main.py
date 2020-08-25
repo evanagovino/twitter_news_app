@@ -11,6 +11,7 @@ import json
 class TwitterPull:
     def __init__(self):
         self.banned_words = ['Twitter', 'robot', 'YouTube', 'Instagram']
+        self.banned_urls = ['pdf']
         self.TWITTER_LIST_ID = '1298220445414633472'
         self.GOOGLE_SERVICE_CREDS_LOCATION = 'google_service_account.json'
         self.TWITTER_CREDS_LOCATION = 'twitter_creds.json'
@@ -19,12 +20,12 @@ class TwitterPull:
         self.sheet_name = 'news'
         self.minimum_words_in_title = 3
 
-    def find_banned_words(self, title_text):
-        dont_return_text = True
-        for word in self.banned_words:
+    def find_banned_words(self, banned_list, title_text):
+        return_text = True
+        for word in banned_list:
             if re.search(word, title_text):
-                dont_return_text = False
-        return dont_return_text
+                return_text = False
+        return return_text
 
     def get_page_title(self, url):
         try:
@@ -33,7 +34,7 @@ class TwitterPull:
                 html_doc = r.content
                 soup = BeautifulSoup(html_doc)
                 if soup.title:
-                    parse_title = self.find_banned_words(soup.title.text)
+                    parse_title = self.find_banned_words(self.banned_words, soup.title.text)
                     if parse_title:
                         [s.decompose() for s in soup("script")]  # remove <script> elements
                         body_text = soup.body.get_text()
@@ -64,10 +65,12 @@ class TwitterPull:
         link = status.urls
         if len(link) > 0:
             link = link[0].expanded_url
-            page_title = self.get_page_title(link)
-            if page_title:
-                difference_seconds = self.get_time_difference(created_at)
-                return [page_title, link, retweet_count, difference_seconds]
+            link_result = self.find_banned_words(self.banned_urls, link)
+            if link_result:
+                page_title = self.get_page_title(link)
+                if page_title:
+                    difference_seconds = self.get_time_difference(created_at)
+                    return [page_title, link, retweet_count, difference_seconds]
 
     def main_function(self):
         with open(self.TWITTER_CREDS_LOCATION) as f:
