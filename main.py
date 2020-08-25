@@ -11,7 +11,7 @@ import json
 class TwitterPull:
     def __init__(self):
         self.banned_words = ['Twitter', 'robot', 'YouTube', 'Instagram']
-        self.TWITTER_LIST_ID = '1042268003302354949'
+        self.TWITTER_LIST_ID = '1298220445414633472'
         self.GOOGLE_SERVICE_CREDS_LOCATION = 'google_service_account.json'
         self.TWITTER_CREDS_LOCATION = 'twitter_creds.json'
         self.GOOGLE_SHEETS_ID = '1oY7URLTauSIBJKS9z7AKAPTHajyvy4GhTQ016PkB20M'
