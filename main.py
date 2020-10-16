@@ -12,7 +12,7 @@ class TwitterPull:
     def __init__(self):
         self.banned_words = ['Twitter', 'robot', 'YouTube', 'Instagram']
         self.banned_urls = ['pdf']
-        self.TWITTER_LIST_ID = '1298220445414633472'
+        self.TWITTER_LIST_ID = '1317124976588115971'
         self.GOOGLE_SERVICE_CREDS_LOCATION = 'google_service_account.json'
         self.TWITTER_CREDS_LOCATION = 'twitter_creds.json'
         self.GOOGLE_SHEETS_ID = '1oY7URLTauSIBJKS9z7AKAPTHajyvy4GhTQ016PkB20M'
